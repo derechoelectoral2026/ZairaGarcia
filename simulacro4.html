@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simulacro INE – Vocalía Ejecutiva Distrital</title>
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Segoe UI',sans-serif; background:#fff0f6; color:#222; min-height:100dvh; overflow-x:hidden; }
+
+/* HEADER */
+.header { background:linear-gradient(135deg,#880e4f,#e91e8c); color:white; padding:10px 14px; display:flex; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,.2); position:sticky; top:0; z-index:200; }
+.header-logo { font-size:1.35rem; flex-shrink:0; }
+.header-text { flex:1; min-width:0; }
+.header h1 { font-size:.86rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.header p  { font-size:.6rem; opacity:.82; margin-top:1px; }
+.header-right { flex-shrink:0; text-align:right; }
+.timer { font-size:1.45rem; font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.5px; line-height:1; }
+.t-lbl { font-size:.55rem; opacity:.65; margin-top:1px; }
+.timer.warning { color:#ffe082; }
+.timer.danger  { color:#ff6b6b; animation:pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.45} }
+.progress-wrap { background:#f8bbd0; height:3px; }
+.progress-bar  { height:3px; background:#fff; transition:width .4s; }
+
+/* MAIN */
+.main { padding:12px 12px 80px; max-width:600px; margin:0 auto; }
+
+/* START */
+.start-screen { background:white; border-radius:14px; padding:22px 16px; box-shadow:0 2px 12px rgba(0,0,0,.08); margin-top:14px; text-align:center; }
+.start-screen h2 { font-size:1.2rem; color:#880e4f; margin-bottom:10px; line-height:1.3; }
+.info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:15px 0; }
+.info-card { background:#fce4ec; border-radius:10px; padding:11px 8px; }
+.info-card .num { font-size:1.5rem; font-weight:800; color:#880e4f; }
+.info-card .lbl { font-size:.72rem; color:#666; margin-top:2px; }
+.topic-section { text-align:left; margin:13px 0; }
+.topic-section-title { font-size:.71rem; font-weight:800; color:#880e4f; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; padding-left:8px; border-left:3px solid #e91e8c; }
+.topic-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+.topic-pill { background:#fce4ec; border-radius:7px; padding:6px 10px; font-size:.75rem; color:#880e4f; display:flex; justify-content:space-between; gap:6px; }
+.topic-pill .cnt { font-weight:800; flex-shrink:0; }
+
+/* QUESTION CARD */
+.question-card { background:white; border-radius:12px; padding:15px 13px; box-shadow:0 2px 10px rgba(0,0,0,.07); margin-bottom:12px; animation:fadeUp .25s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)} }
+.q-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:11px; flex-wrap:wrap; gap:5px; }
+.q-badge { font-size:.66rem; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; }
+.q-num { color:#aaa; font-size:.75rem; }
+
+/* PASSAGE */
+.passage { background:#fff0f6; border-left:4px solid #e91e8c; padding:10px 12px; border-radius:0 8px 8px 0; margin-bottom:12px; font-size:.83rem; line-height:1.7; }
+.passage-label { font-size:.64rem; font-weight:700; color:#880e4f; text-transform:uppercase; margin-bottom:5px; }
+
+/* QUESTION TEXT */
+.question-text { font-size:.9rem; font-weight:600; line-height:1.5; margin-bottom:13px; }
+
+/* OPTIONS */
+.options { display:flex; flex-direction:column; gap:8px; }
+.option { display:flex; align-items:flex-start; gap:10px; padding:13px 12px; border:2px solid #e0e0e0; border-radius:10px; cursor:pointer; transition:border-color .13s,background .13s; font-size:.86rem; line-height:1.45; min-height:50px; }
+.option:active:not(.disabled) { border-color:#e91e8c; background:#fce4ec33; }
+.option.selected  { border-color:#e91e8c; background:#fce4ec55; }
+.option.correct   { border-color:#4caf50; background:#e8f5e9; }
+.option.incorrect { border-color:#f44336; background:#ffebee; }
+.option.disabled  { cursor:default; }
+.option-letter { width:26px; height:26px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.75rem; flex-shrink:0; transition:background .13s,color .13s; }
+.option.selected  .option-letter { background:#e91e8c; color:white; }
+.option.correct   .option-letter { background:#4caf50; color:white; }
+.option.incorrect .option-letter { background:#f44336; color:white; }
+.opt-text { flex:1; }
+.opt-icon { flex-shrink:0; font-size:.9rem; }
+
+/* EXPLANATION */
+.explanation { margin-top:12px; padding:11px 12px; background:#fff0f6; border-radius:9px; border-left:4px solid #e91e8c; font-size:.81rem; line-height:1.65; display:none; }
+.explanation.show { display:block; }
+.explanation strong { color:#880e4f; }
+
+/* VER SOLUCIÓN */
+.ver-sol-wrap { text-align:center; margin-bottom:10px; }
+.btn-ver-sol { background:white; border:2px solid #e91e8c; color:#880e4f; padding:9px 20px; border-radius:9px; font-weight:700; font-size:.82rem; cursor:pointer; min-height:44px; transition:all .13s; }
+.btn-ver-sol:active { background:#fce4ec; }
+
+/* BUTTONS */
+.btn { padding:10px 18px; border-radius:10px; border:none; font-size:.85rem; font-weight:700; cursor:pointer; transition:all .15s; min-height:44px; }
+.btn:active { transform:scale(.96); }
+.btn-primary   { background:linear-gradient(135deg,#880e4f,#e91e8c); color:white; }
+.btn-primary:active   { opacity:.88; }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+.btn-secondary { background:#f0f0f0; color:#555; }
+.btn-secondary:active { background:#e0e0e0; }
+.btn-lg { padding:13px 26px; font-size:.92rem; border-radius:12px; }
+.btn-sm { padding:9px 15px; font-size:.8rem; min-height:40px; }
+
+/* BOTTOM NAV */
+.nav-bar { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid #e0e0e0; padding:8px 14px; padding-bottom:max(8px,env(safe-area-inset-bottom)); display:flex; justify-content:space-between; align-items:center; gap:8px; box-shadow:0 -2px 10px rgba(0,0,0,.07); z-index:200; }
+.nav-info { font-size:.77rem; color:#888; line-height:1.4; }
+.nav-info span { color:#880e4f; font-weight:700; }
+.nav-btns { display:flex; gap:7px; flex-shrink:0; }
+
+/* RESULTS */
+.results-screen { background:white; border-radius:14px; padding:24px 16px; box-shadow:0 2px 12px rgba(0,0,0,.08); margin-top:14px; text-align:center; }
+.score-circle { width:108px; height:108px; border-radius:50%; margin:0 auto 16px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:1.85rem; font-weight:900; color:white; }
+.score-sub { font-size:.68rem; font-weight:500; opacity:.85; }
+.score-good { background:linear-gradient(135deg,#43a047,#66bb6a); }
+.score-mid  { background:linear-gradient(135deg,#f57c00,#ffa726); }
+.score-low  { background:linear-gradient(135deg,#c62828,#ef5350); }
+.stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:16px 0; }
+.stat-card { background:#f9f9f9; border-radius:10px; padding:11px 8px; }
+.stat-card .n { font-size:1.35rem; font-weight:800; }
+.stat-card .l { font-size:.7rem; color:#888; margin-top:2px; }
+.stat-correct .n { color:#43a047; }
+.stat-wrong .n   { color:#e53935; }
+.stat-skip .n    { color:#888; }
+.area-row { display:flex; align-items:center; gap:9px; margin-bottom:8px; font-size:.8rem; }
+.area-name { flex:1; color:#444; }
+.area-bar-wrap { flex:2; background:#eee; border-radius:4px; height:6px; }
+.area-bar { height:6px; border-radius:4px; }
+.area-pct { width:32px; text-align:right; font-weight:700; font-size:.77rem; }
+.weak-banner { background:linear-gradient(135deg,#880e4f,#e91e8c); color:white; border-radius:11px; padding:12px 14px; margin:12px 0; text-align:left; }
+.weak-banner h4 { margin-bottom:4px; font-size:.9rem; }
+.weak-banner p  { font-size:.78rem; opacity:.9; margin-bottom:6px; }
+.weak-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.weak-tag  { background:rgba(255,255,255,.25); border-radius:5px; padding:3px 8px; font-size:.74rem; font-weight:700; }
+.hidden { display:none !important; }
+@media(max-width:360px){ .topic-grid{grid-template-columns:1fr} .info-grid{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CONFIG: edita SOLO este bloque para crear un nuevo simulacro.
+     ════════════════════════════════════════════════════════════════ -->
+<script>
+  const CONFIG = {
+    // URL RAW de GitHub al banco de preguntas (debe contener: const Q = [...];)
+    BANCO_URL:  'https://raw.githubusercontent.com/derechoelectoral2026/Bancos-Spen/main/banco-modulo-ve.js',
+
+    // Texto del header y la pantalla de inicio
+    MODULO:     'Vocalía Ejecutiva de Junta Distrital Ejecutiva',
+    SUBTITULO:  'Conocimientos técnicos del cargo · Diagnóstico · 🔀 Aleatorio',
+    DESCRIPCION:'Evalúa los conocimientos técnicos específicos del cargo.',
+    FUENTES:    'LGIPE (2014) · LGMDE (2021) · LGPP (2023) · LGSMIME (2024) · Estatuto SPEN (2024) · Reglamento de Sesiones JLD y JLE · Reglamento INE en Materia de Adquisiciones (2020)',
+
+    // Tiempo del examen, en minutos
+    TIEMPO_MIN: 50,
+
+    // Logo/emoji que aparece en el header y en la pantalla de inicio
+    LOGO_EMOJI: '🏛️'
+  };
+</script>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo" id="hdrLogo">🏛️</div>
+  <div class="header-text">
+    <h1 id="hdrTitle">Cargando…</h1>
+    <p id="hdrSub"></p>
+  </div>
+  <div class="header-right">
+    <div class="timer" id="timer">--:--</div>
+    <div class="t-lbl">tiempo restante</div>
+  </div>
+</div>
+<div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+<div class="main">
+
+  <!-- Pantalla de carga -->
+  <div class="start-screen" id="loadingScreen">
+    <h2>⏳ Cargando banco de preguntas…</h2>
+    <p style="color:#666;margin-top:10px;font-size:0.9rem">Conectando con el repositorio remoto.</p>
+  </div>
+
+  <!-- START SCREEN: se llena dinámicamente desde el banco -->
+  <div class="start-screen hidden" id="startScreen"></div>
+
+  <div id="examScreen" class="hidden"></div>
+  <div id="resultsScreen" class="hidden"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="nav-bar hidden" id="navBar">
+  <div class="nav-info">
+    Preg. <span id="navCurrent">1</span> de <span id="navTotal">0</span>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-secondary btn-sm" id="btnPrev" onclick="prevQ()">← Ant.</button>
+    <button class="btn btn-primary  btn-sm" id="btnNext" onclick="nextQ()">Sig. →</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ESTADO GLOBAL
+═══════════════════════════════════════════════════════════════ */
+let Q = [];
+let answers, revealed, current, timerInterval, secondsLeft;
+const TIME_LIMIT = (CONFIG.TIEMPO_MIN || 50) * 60;
+
+// Aplicar CONFIG al header y al título de la pestaña
+document.getElementById('hdrLogo').textContent = CONFIG.LOGO_EMOJI || '🏛️';
+document.getElementById('hdrTitle').textContent = CONFIG.MODULO;
+document.getElementById('hdrSub').textContent = CONFIG.SUBTITULO || '';
+document.getElementById('timer').textContent =
+  String(CONFIG.TIEMPO_MIN).padStart(2,'0') + ':00';
+document.title = 'Simulacro INE – ' + CONFIG.MODULO;
+
+/* ═══════════════════════════════════════════════════════════════
+   ALEATORIZACIÓN (Fisher-Yates, distribución uniforme)
+═══════════════════════════════════════════════════════════════ */
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function shuffleOptions(q) {
+  const indices = [0, 1, 2];
+  const shuffled = shuffleArray(indices);
+  return { ...q, o: shuffled.map(i => q.o[i]), c: shuffled.indexOf(q.c) };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARGA DEL BANCO DESDE GITHUB RAW
+═══════════════════════════════════════════════════════════════ */
+async function cargarBanco() {
+  try {
+    const url = CONFIG.BANCO_URL + (CONFIG.BANCO_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' al pedir el banco');
+    const codigo = await resp.text();
+
+    const banco = new Function(codigo + '\nreturn typeof Q !== "undefined" ? Q : null;')();
+    if (!Array.isArray(banco) || banco.length === 0) {
+      throw new Error('El archivo no contiene un array Q válido con preguntas');
+    }
+
+    const malas = banco.filter(p =>
+      !p.q || !Array.isArray(p.o) || p.o.length !== 3 ||
+      ![0,1,2].includes(p.c) || !p.ex
+    );
+    if (malas.length > 0) {
+      console.warn('Aviso: ' + malas.length + ' preguntas tienen campos faltantes o inválidos.');
+    }
+
+    // ROTACIÓN GLOBAL ALEATORIA + barajado de opciones
+    Q = shuffleArray(banco).map(q => shuffleOptions(q));
+
+    document.getElementById('navTotal').textContent = Q.length;
+    document.getElementById('loadingScreen').classList.add('hidden');
+    renderStartScreen();
+    document.getElementById('startScreen').classList.remove('hidden');
+  } catch (err) {
+    document.getElementById('loadingScreen').innerHTML = `
+      <h2 style="color:#c62828">❌ No se pudo cargar el banco</h2>
+      <p style="color:#666;margin-top:12px;font-size:0.9rem;line-height:1.5">
+        <strong>URL:</strong> <code style="background:#f5f5f5;padding:2px 5px;border-radius:4px;font-size:0.85em;word-break:break-all">${CONFIG.BANCO_URL}</code><br><br>
+        <strong>Error:</strong> ${err.message}<br><br>
+        Verifica que la URL apunte al RAW de GitHub (raw.githubusercontent.com) y que el archivo contenga <code>const Q = [...]</code>.
+      </p>`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PALETA Y ESTILOS POR SUBÁREA (asignados dinámicamente)
+═══════════════════════════════════════════════════════════════ */
+const PALETA = [
+  {bg:"#fce4ec",color:"#880e4f",icon:"🗳️"}, {bg:"#fce4ec",color:"#ad1457",icon:"🙋"},
+  {bg:"#e8eaf6",color:"#1a237e",icon:"⚖️"}, {bg:"#f3e5f5",color:"#6a1b9a",icon:"🚩"},
+  {bg:"#ffebee",color:"#b71c1c",icon:"🚫"}, {bg:"#e3f2fd",color:"#0d47a1",icon:"🏢"},
+  {bg:"#e0f7fa",color:"#006064",icon:"📋"}, {bg:"#fff8e1",color:"#f57f17",icon:"💰"},
+  {bg:"#e8f5e9",color:"#1b5e20",icon:"👥"}, {bg:"#ede7f6",color:"#4527a0",icon:"📂"},
+  {bg:"#f1f8e9",color:"#33691e",icon:"📜"}, {bg:"#fbe9e7",color:"#bf360c",icon:"🔍"}
+];
+const ICONOS_AREA = ["🗳️","⚖️","🏢","📋","💼","📚","🌐","⭐"];
+
+let SS = {};
+function asignarEstilos() {
+  SS = {};
+  const subs = [...new Set(Q.map(q => q.sa))].sort();
+  subs.forEach((sa, i) => SS[sa] = PALETA[i % PALETA.length]);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PANTALLA DE INICIO DINÁMICA
+═══════════════════════════════════════════════════════════════ */
+function renderStartScreen() {
+  asignarEstilos();
+  // Agrupar por área principal, conservando orden de aparición
+  const areas = {}; // area → { count, subs: { sa → { sal, count } } }
+  Q.forEach(q => {
+    if (!areas[q.area]) areas[q.area] = { count: 0, subs: {} };
+    areas[q.area].count++;
+    if (!areas[q.area].subs[q.sa]) areas[q.area].subs[q.sa] = { sal: q.sal, count: 0 };
+    areas[q.area].subs[q.sa].count++;
+  });
+
+  const areasList = Object.keys(areas);
+  const numAreas = areasList.length;
+
+  let topicHTML = '';
+  areasList.forEach((area, idx) => {
+    const ico = ICONOS_AREA[idx % ICONOS_AREA.length];
+    const c = areas[area].count;
+    topicHTML += '<div class="topic-section-title">' + ico + ' ' + (idx+1) + '. ' + area + ' (' + c + ' pregunta' + (c!==1?'s':'') + ')</div>';
+    topicHTML += '<div class="topic-grid">';
+    Object.keys(areas[area].subs).sort().forEach(sa => {
+      const s = areas[area].subs[sa];
+      topicHTML += '<div class="topic-pill"><span>' + sa + ' ' + s.sal + '</span><span class="cnt">' + s.count + '</span></div>';
+    });
+    topicHTML += '</div>';
+  });
+
+  const fuentesHTML = CONFIG.FUENTES
+    ? '<p style="font-size:.73rem;color:#888;margin-bottom:14px">📚 Fuentes: ' + CONFIG.FUENTES + '</p>'
+    : '';
+
+  document.getElementById('startScreen').innerHTML =
+    '<h2>' + (CONFIG.LOGO_EMOJI || '🏛️') + ' ' + CONFIG.MODULO + '</h2>' +
+    '<p style="background:#fce4ec;border-radius:10px;padding:10px;color:#880e4f;font-weight:600;margin-bottom:13px;font-size:.81rem">' +
+      '🎯 ' + (CONFIG.DESCRIPCION || '') +
+      ' <strong>🔀 Preguntas en orden aleatorio cada vez</strong></p>' +
+    '<div class="info-grid">' +
+      '<div class="info-card"><div class="num">' + Q.length + '</div><div class="lbl">Preguntas</div></div>' +
+      '<div class="info-card"><div class="num">' + CONFIG.TIEMPO_MIN + '</div><div class="lbl">Minutos</div></div>' +
+      '<div class="info-card"><div class="num">' + numAreas + '</div><div class="lbl">Áreas</div></div>' +
+    '</div>' +
+    '<div class="topic-section">' + topicHTML + '</div>' +
+    fuentesHTML +
+    '<button class="btn btn-primary btn-lg" style="width:100%" onclick="startExam()">Comenzar diagnóstico →</button>';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INICIO
+═══════════════════════════════════════════════════════════════ */
+function startExam() {
+  answers  = new Array(Q.length).fill(null);
+  revealed = new Array(Q.length).fill(false);
+  current  = 0;
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('navBar').classList.remove('hidden');
+  renderQuestion(0);
+  startTimer();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER (preserva la lógica original: indicador "X era incorrecta")
+═══════════════════════════════════════════════════════════════ */
+function renderQuestion(idx) {
+  current = idx;
+  const q = Q[idx], sc = SS[q.sa] || {bg:"#fce4ec",color:"#880e4f",icon:"📌"};
+  const isR = revealed[idx], sel = answers[idx];
+
+  let ph = '';
+  if (q.p) ph = '<div class="passage"><div class="passage-label">📄 ' + (q.pt||'') + '</div>' + q.p.replace(/\n/g,'<br>') + '</div>';
+
+  const L = ['A','B','C'];
+  const opts = q.o.map((o, i) => {
+    let cls = 'option', icon = '';
+    if (isR) {
+      cls += ' disabled';
+      if (i === q.c) { cls += ' correct'; icon = '<span class="opt-icon">✅</span>'; }
+      else if (i === sel && i !== q.c) { cls += ' incorrect'; icon = '<span class="opt-icon">❌</span>'; }
+    } else if (i === sel) cls += ' selected';
+    return '<div class="' + cls + '" onclick="selOpt(' + idx + ',' + i + ')">' +
+      '<div class="option-letter">' + L[i] + '</div>' +
+      '<div class="opt-text">' + o + '</div>' + icon +
+    '</div>';
+  }).join('');
+
+  // Comportamiento original de este simulacro: solo señala la incorrecta
+  const ri = isR && sel !== null && sel !== q.c
+    ? L[sel] + ' era incorrecta'
+    : '';
+
+  document.getElementById('examScreen').innerHTML =
+    '<div class="question-card">' +
+      '<div class="q-meta">' +
+        '<span class="q-badge" style="background:' + sc.bg + ';color:' + sc.color + '">' + sc.icon + ' ' + q.sal + '</span>' +
+        '<span class="q-num">' + (idx+1) + '/' + Q.length + '</span>' +
+      '</div>' +
+      ph +
+      '<div class="question-text">' + q.q + '</div>' +
+      '<div class="options">' + opts + '</div>' +
+      '<div class="explanation ' + (isR ? 'show' : '') + '"><strong>' + ri + (ri ? ' — ' : '') + 'Explicación:</strong> ' + q.ex + '</div>' +
+    '</div>' +
+    (!isR && answers[idx] !== null
+      ? '<div class="ver-sol-wrap"><button class="btn-ver-sol" onclick="rev(' + idx + ')">Ver explicación 💡</button></div>'
+      : '');
+
+  document.getElementById('progressBar').style.width = ((idx+1)/Q.length*100) + '%';
+  document.getElementById('navCurrent').textContent = idx + 1;
+  document.getElementById('navTotal').textContent   = Q.length;
+  document.getElementById('btnPrev').disabled = idx === 0;
+  document.getElementById('btnNext').textContent = idx === Q.length-1 ? '🏁 Finalizar' : 'Sig. →';
+  window.scrollTo({top: 0, behavior: 'instant'});
+}
+
+function selOpt(qi, oi) { if (revealed[qi]) return; answers[qi] = oi; renderQuestion(qi); }
+function rev(idx) { revealed[idx] = true; renderQuestion(idx); }
+function nextQ() { if (current < Q.length-1) renderQuestion(current+1); else showResults(); }
+function prevQ() { if (current > 0) renderQuestion(current-1); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TIMER
+═══════════════════════════════════════════════════════════════ */
+function startTimer() {
+  secondsLeft = TIME_LIMIT;
+  timerInterval = setInterval(() => {
+    secondsLeft--;
+    const m = Math.floor(secondsLeft/60).toString().padStart(2,'0');
+    const s = (secondsLeft%60).toString().padStart(2,'0');
+    const el = document.getElementById('timer');
+    el.textContent = m + ':' + s;
+    el.className = 'timer' + (secondsLeft < 300 ? ' danger' : secondsLeft < 600 ? ' warning' : '');
+    if (secondsLeft <= 0) { clearInterval(timerInterval); showResults(); }
+  }, 1000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESULTADOS
+═══════════════════════════════════════════════════════════════ */
+function showResults() {
+  clearInterval(timerInterval);
+  document.getElementById('examScreen').classList.add('hidden');
+  document.getElementById('navBar').classList.add('hidden');
+
+  const total    = Q.length;
+  const answered = answers.filter(a => a !== null).length;
+  const correct  = answers.filter((a, i) => a === Q[i].c).length;
+  const wrong    = answered - correct;
+  const skipped  = total - answered;
+  const pct      = Math.round(correct / total * 100);
+
+  const areas = {};
+  Q.forEach((q, i) => {
+    if (!areas[q.area]) areas[q.area] = {total:0, correct:0};
+    areas[q.area].total++;
+    if (answers[i] === q.c) areas[q.area].correct++;
+  });
+
+  const subs = {};
+  Q.forEach((q, i) => {
+    if (!subs[q.sa]) subs[q.sa] = {label:q.sal, total:0, correct:0};
+    subs[q.sa].total++;
+    if (answers[i] === q.c) subs[q.sa].correct++;
+  });
+
+  const weak = Object.entries(subs).filter(([,s]) => s.correct/s.total < 0.6).map(([,s]) => s.label);
+  const cc   = pct >= 70 ? 'score-good' : pct >= 50 ? 'score-mid' : 'score-low';
+  const msg  = pct >= 80 ? '¡Excelente! Dominas los conocimientos técnicos del cargo.'
+             : pct >= 60 ? 'Buen avance. Refuerza los temas señalados antes del examen.'
+             : 'Diagnóstico listo. Enfócate en las áreas marcadas antes del examen.';
+
+  // Color por área asignado dinámicamente
+  const areaPalette = ["#880e4f","#1a237e","#0d47a1","#006064","#1b5e20","#4a148c","#e65100","#4527a0"];
+  const areaList = Object.keys(areas);
+  const rows = areaList.map((name, i) => {
+    const a    = areas[name];
+    const p    = Math.round(a.correct / a.total * 100);
+    const icon = p >= 80 ? '✅' : p >= 60 ? '⚠️' : '❌';
+    const col  = areaPalette[i % areaPalette.length];
+    const bc   = p >= 60
+      ? 'linear-gradient(90deg,' + col + ',#e91e8c)'
+      : 'linear-gradient(90deg,#c62828,#ef5350)';
+    return '<div class="area-row">' +
+      '<div class="area-name">' + icon + ' ' + name + '</div>' +
+      '<div class="area-bar-wrap"><div class="area-bar" style="width:' + p + '%;background:' + bc + '"></div></div>' +
+      '<div class="area-pct" style="color:' + (p>=60?'#880e4f':'#c62828') + '">' + p + '%</div>' +
+    '</div>';
+  }).join('');
+
+  const wb = weak.length
+    ? '<div class="weak-banner"><h4>🎯 Estudia esto primero:</h4><p>Menos del 60% en estas subáreas. Son clave para el cargo.</p><div class="weak-tags">' + weak.map(t=>'<span class="weak-tag">📌 ' + t + '</span>').join('') + '</div></div>'
+    : '<div style="background:#fce4ec;border-radius:10px;padding:13px;margin:13px 0;color:#880e4f;font-weight:600">✅ ¡Dominas todas las áreas técnicas del cargo!</div>';
+
+  const tu = TIME_LIMIT - secondsLeft;
+  const tm = Math.floor(tu/60), ts = tu%60;
+
+  document.getElementById('resultsScreen').innerHTML =
+    '<div class="results-screen">' +
+      '<div style="background:#fce4ec;border-radius:10px;padding:9px 14px;margin-bottom:16px;font-size:.8rem;color:#880e4f;font-weight:600">' +
+        '📋 DIAGNÓSTICO ' + CONFIG.MODULO.toUpperCase() + ' — ' + new Date().toLocaleDateString('es-MX') +
+      '</div>' +
+      '<div class="score-circle ' + cc + '">' + pct + '%<div class="score-sub">' + correct + '/' + total + '</div></div>' +
+      '<h2 style="margin-bottom:7px">' + msg + '</h2>' +
+      '<p style="margin-bottom:18px;color:#777;font-size:.83rem">Tiempo: ' + tm + 'm ' + ts + 's · Respondidas: ' + answered + '/' + total + '</p>' +
+      '<div class="stats-grid">' +
+        '<div class="stat-card stat-correct"><div class="n">' + correct + '</div><div class="l">✅ Correctas</div></div>' +
+        '<div class="stat-card stat-wrong"><div class="n">' + wrong + '</div><div class="l">❌ Incorrectas</div></div>' +
+        '<div class="stat-card stat-skip"><div class="n">' + skipped + '</div><div class="l">⏭️ Saltadas</div></div>' +
+      '</div>' +
+      wb +
+      '<div style="text-align:left;margin-bottom:22px">' +
+        '<h3 style="font-size:.87rem;font-weight:700;color:#444;margin-bottom:9px">Desempeño por área</h3>' +
+        rows +
+      '</div>' +
+      '<div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">' +
+        '<button class="btn btn-primary btn-lg" onclick="reviewExam()">Revisar con explicaciones</button>' +
+        '<button class="btn btn-secondary btn-lg" onclick="location.reload()">🔀 Nuevo diagnóstico</button>' +
+      '</div>' +
+    '</div>';
+  document.getElementById('resultsScreen').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+
+function reviewExam() {
+  document.getElementById('resultsScreen').classList.add('hidden');
+  document.getElementById('examScreen').classList.remove('hidden');
+  document.getElementById('navBar').classList.remove('hidden');
+  revealed = revealed.map(() => true);
+  renderQuestion(0);
+  window.scrollTo(0, 0);
+}
+
+// Lanzar carga del banco al abrir la página
+cargarBanco();
+</script>
+</body>
+</html>
